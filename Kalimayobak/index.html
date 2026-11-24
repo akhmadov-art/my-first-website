@@ -26,18 +26,14 @@
     </section>
 
     <section class="stats">
-        <div class="stat">
-            <span>⭐ Холҳо</span>
-            <strong id="score">0</strong>
-        </div>
-        <div class="stat">
-            <span>⏱ Вақт</span>
-            <strong id="timer">00:00</strong>
-        </div>
-        <div class="stat">
-            <span>🏆 Рекорд</span>
-            <strong id="record">0</strong>
-        </div>
+        <div class="stat"><span>🎯 Миссия</span><strong id="mission">1 / 100</strong></div>
+        <div class="stat"><span>⭐ Холҳо</span><strong id="score">0</strong></div>
+        <div class="stat"><span>⏱ Вақт</span><strong id="timer">02:00</strong></div>
+        <div class="stat"><span>🏆 Рекорд</span><strong id="record">0</strong></div>
+    </section>
+    <section class="mission-strip">
+        <div><strong>Миссияи <span id="missionNumber">1</span></strong><small id="missionText">Ҳамаи калимаҳоро пайдо кун!</small></div>
+        <div class="hint-counter">💡 Ёриҳо: <strong id="hintsLeft">3</strong></div>
     </section>
 
     <section class="settings">
@@ -82,7 +78,7 @@
         </div>
 
         <div class="controls">
-            <button id="hintBtn" class="btn hint">💡 Ёрӣ</button>
+            <button id="hintBtn" class="btn hint">💡 Ёрӣ (3)</button>
             <button id="pauseBtn" class="btn pause">⏸ Таваққуф</button>
             <button id="restartBtn" class="btn restart">🔄 Аз нав</button>
         </div>
@@ -97,8 +93,8 @@
         <h3>📖 Чӣ тавр бозӣ кардан лозим?</h3>
         <p>1. Аз рӯйхати калимаҳо як калимаро интихоб кун.</p>
         <p>2. Ҳарфҳои онро дар майдон пайдо кун.</p>
-        <p>3. Бо ангушт ё муш аз ҳарфи аввал то охир ҳаракат кун.</p>
-        <p>4. Барои ҳар калимаи ёфташуда хол мегирӣ!</p>
+        <p>3. Калимаҳо танҳо рост, чап, боло ё поён ҷойгир мешаванд; диагоналӣ нестанд.</p>
+        <p>4. Ҳар калима ранги махсус мегирад. Барои ҳар миссияи гузаронидашуда 1 ёрии нав мегирӣ.</p>
     </section>
 
 </main>
@@ -113,9 +109,8 @@
         <h2>Офарин! Ғолиб шудӣ!</h2>
         <p>Ҳамаи калимаҳоро ёфтӣ!</p>
         <h3 id="finalScore">0 хол</h3>
-        <button id="playAgainBtn" class="btn restart">
-            Боз як бори дигар
-        </button>
+        <button id="playAgainBtn" class="btn restart">Аз нав бозӣ кардан</button>
+        <button id="nextMissionBtn" class="btn next-mission">Миссияи навбатӣ ➜</button>
     </div>
 </div>
 
