@@ -54,7 +54,7 @@ jobs:
           cp Kalimayobak/index.html www/index.html
           cp Kalimayobak/style.css www/style.css
           cp Kalimayobak/script.js www/script.js
-          cp logo.svg www/logo.svg
+          cp Kalimayobak/logo.svg www/logo.svg
 
       - name: Generate Android project
         run: |
