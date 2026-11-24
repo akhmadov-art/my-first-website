@@ -167,4 +167,27 @@ setInterval(()=>{
  if(seconds===10)sound("tick");
  if(seconds===0){finished=true;$("message").textContent="⏰ Вақт тамом шуд! Аз нав кӯшиш кун.";sound("timeout");$("playAgainBtn").textContent="Боз кӯшиш кун";$("winModal").classList.add("show");$("nextMissionBtn").style.display="none";$("finalScore").textContent=score+" хол";}
 },1000);
-updateHUD();startGame();
+
+const levelSelect=$("levelSelect");
+for(let n=1;n<=100;n++){const opt=document.createElement("option");opt.value=n;opt.textContent="Миссия "+n;levelSelect.appendChild(opt);}
+const savedName=localStorage.getItem("kalimaPlayerName")||"";
+const savedAvatar=localStorage.getItem("kalimaPlayerAvatar")||"🧑‍🎓";
+$("profileName").value=savedName;$("avatarSelect").value=savedAvatar;$("avatarPreview").textContent=savedAvatar;
+$("homeRecord").textContent=record;levelSelect.value=String(mission);
+$("record").textContent=record;
+$("avatarSelect").addEventListener("change",()=>{$("avatarPreview").textContent=$("avatarSelect").value;localStorage.setItem("kalimaPlayerAvatar",$("avatarSelect").value);});
+$("startGameBtn").addEventListener("click",()=>{
+ const name=$("profileName").value.trim()||"Бозигар";
+ localStorage.setItem("kalimaPlayerName",name);
+ localStorage.setItem("kalimaPlayerAvatar",$("avatarSelect").value);
+ mission=Number(levelSelect.value)||1;localStorage.setItem("kalimaMission",mission);
+ $("welcomeName").textContent=name;
+ $("homeScreen").hidden=true;$("gameScreen").hidden=false;$("backToHome").hidden=false;
+ startGame();window.scrollTo({top:0,behavior:"smooth"});
+});
+function goHome(){
+ paused=true;$("gameScreen").hidden=true;$("homeScreen").hidden=false;$("backToHome").hidden=true;$("winModal").classList.remove("show");
+ $("homeRecord").textContent=record;levelSelect.value=String(mission);window.scrollTo({top:0,behavior:"smooth"});
+}
+$("backToHome").addEventListener("click",goHome);$("homeFromWin").addEventListener("click",goHome);
+updateHUD();
