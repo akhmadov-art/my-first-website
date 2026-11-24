@@ -1,0 +1,95 @@
+
+name: KalimaYobak - Auto Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    name: Generate Android Files and APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Гирифтани код аз GitHub
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Насби Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 3. Насби Java
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # 4. Насби Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 5. Насби китобхонаҳо
+      - name: Install Dependencies
+        run: npm install
+
+      # 6. Сохтани папкаи WWW
+      - name: Prepare Web Files
+        run: |
+          mkdir -p www
+          cp index.html www/
+          cp style.css www/
+          cp script.js www/
+
+          if [ -f logo.svg ]; then
+            cp logo.svg www/
+          fi
+
+      # 7. Сохтани Android Project
+      - name: Generate Android Project
+        run: |
+          if [ ! -d android ]; then
+            npx cap add android
+          fi
+
+          npx cap sync android
+
+      # 8. Сохтани APK
+      - name: Build Android APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      # 9. Санҷиши мавҷудияти APK
+      - name: Check APK
+        run: |
+          ls -lh android/app/build/outputs/apk/debug/
+          test -f android/app/build/outputs/apk/debug/app-debug.apk
+
+      # 10. ZIP кардани Android Project
+      - name: Package Android Project
+        run: |
+          zip -qr KalimaYobak-Android-Project.zip android
+
+      # 11. Бор кардани APK ва Android Project
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KalimaYobak-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Upload Android Project
+        uses: actions/upload-artifact@v4
+        with:
+          name: KalimaYobak-Android-Files
+          path: KalimaYobak-Android-Project.zip
+          retention-days: 30
