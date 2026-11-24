@@ -1,527 +1,170 @@
-
-const categories = {
-    animals: ["ГУРБА", "САГ", "ШЕР", "ПАЛАНГ", "ФИЛ", "ХАРГӮШ", "ГОВ", "АСП", "ГУРГ", "МОР"],
-    fruits: ["СЕБ", "НОК", "АНГУР", "АНОР", "ЗАРДОЛУ", "ШАФТОЛУ", "ТУТ", "БАНАН"],
-    technology: ["КОМПЮТЕР", "ТЕЛЕФОН", "ИНТЕРНЕТ", "РОБОТ", "БАРНОМА", "КОД", "МОНИТОР", "КЛАВИАТУРА"],
-    sports: ["ФУТБОЛ", "ВОЛЕЙБОЛ", "БАСКЕТБОЛ", "ТЕННИС", "БОКС", "ШОҲМОТ", "ДАВИДАН"],
-    nature: ["ОФТОБ", "БАРФ", "БОД", "БОРАН", "ДАРЁ", "КӮҲ", "БОРИШ", "БАҲОР", "ТОБИСТОН"]
+const categories={
+ animals:["ГУРБА","САГ","ШЕР","ПАЛАНГ","ФИЛ","ХАРГӮШ","ГОВ","АСП","ГУРГ","МОР","БУЗ","ГУСФАНД"],
+ fruits:["СЕБ","НОК","АНГУР","АНОР","ЗАРДОЛУ","ШАФТОЛУ","ТУТ","БАНАН","ЛИМУ","ОЛУ"],
+ technology:["КОМПЮТЕР","ТЕЛЕФОН","ИНТЕРНЕТ","РОБОТ","БАРНОМА","МОНИТОР","КОД","МУШ","ЭКРАН","ПЛАНШЕТ"],
+ sports:["ФУТБОЛ","ВОЛЕЙБОЛ","БАСКЕТБОЛ","ТЕННИС","БОКС","ШОҲМОТ","ДАВИДАН","ШИНОВАРӢ"],
+ nature:["ОФТОБ","БАРФ","БОД","БОРОН","ДАРЁ","КӮҲ","БОРИШ","БАҲОР","ТОБИСТОН","ТИРАМОҲ","ЗИМИСТОН"]
 };
+const allWords=Object.values(categories).flat();
+const palette=["#2878d0","#168768","#a34bc5","#c47b20","#c34c72","#168e9a","#6e7cce","#648d32","#bd5c32","#7954b5"];
+const $=id=>document.getElementById(id);
+const gridElement=$("grid");
+let mission=Math.max(1,Math.min(100,Number(localStorage.getItem("kalimaMission"))||1));
+let hints=Math.max(0,Number(localStorage.getItem("kalimaHints")??3));
+let record=Number(localStorage.getItem("kalimaRecord"))||0;
+let size=10,board=[],words=[],foundWords=[],placements={},score=0,seconds=120,paused=false,finished=false,soundEnabled=true;
+let startCell=null,currentSelection=[],audioContext=null;
+$("record").textContent=record;
 
-const difficulties = {
-    easy: { size: 8, count: 6 },
-    medium: { size: 10, count: 8 },
-    hard: { size: 12, count: 10 }
-};
-
-const directions = [
-    [0, 1], [1, 0], [0, -1], [-1, 0],
-    [1, 1], [1, -1], [-1, 1], [-1, -1]
-];
-
-const gridElement = document.getElementById("grid");
-const wordListElement = document.getElementById("wordList");
-const scoreElement = document.getElementById("score");
-const timerElement = document.getElementById("timer");
-const recordElement = document.getElementById("record");
-const messageElement = document.getElementById("message");
-
-let size = 10;
-let board = [];
-let words = [];
-let foundWords = [];
-let placements = {};
-
-let score = 0;
-let seconds = 0;
-let paused = false;
-let finished = false;
-let soundEnabled = true;
-
-let startCell = null;
-let endCell = null;
-let currentSelection = [];
-
-let record = Number(localStorage.getItem("kalimaRecord")) || 0;
-
-recordElement.textContent = record;
-
-// Овозҳо
-function playSound(frequency = 600) {
-    if (!soundEnabled) return;
-
-    try {
-        const audio = new AudioContext();
-        const oscillator = audio.createOscillator();
-        const gain = audio.createGain();
-
-        oscillator.connect(gain);
-        gain.connect(audio.destination);
-
-        oscillator.frequency.value = frequency;
-        gain.gain.value = 0.08;
-
-        oscillator.start();
-        oscillator.stop(audio.currentTime + 0.12);
-
-        oscillator.onended = () => audio.close();
-    } catch (error) {
-        console.log("Sound unavailable");
-    }
+function sound(type="good"){
+ if(!soundEnabled)return;
+ try{
+  audioContext ||= new (window.AudioContext||window.webkitAudioContext)();
+  if(audioContext.state==="suspended")audioContext.resume();
+  const notes=type==="good"?[660,880,1100]:type==="bad"?[220,165]:type==="hint"?[520,720]:type==="win"?[523,659,784,1046]:[330,260];
+  notes.forEach((freq,i)=>{
+   const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+   osc.type="sine";osc.frequency.value=freq;osc.connect(gain);gain.connect(audioContext.destination);
+   const start=audioContext.currentTime+i*.105;
+   gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.12,start+.015);gain.gain.exponentialRampToValueAtTime(.0001,start+.16);
+   osc.start(start);osc.stop(start+.17);
+  });
+ }catch(e){console.info("Audio unavailable",e)}
 }
-
-// Вақт
-setInterval(() => {
-    if (!paused && !finished) {
-        seconds++;
-
-        const minutes = Math.floor(seconds / 60);
-        const remaining = seconds % 60;
-
-        timerElement.textContent =
-            String(minutes).padStart(2, "0") + ":" +
-            String(remaining).padStart(2, "0");
-    }
-}, 1000);
-
-// Тасодуфӣ
-function randomItem(array) {
-    return array[Math.floor(Math.random() * array.length)];
+function formatTime(n){return String(Math.floor(n/60)).padStart(2,"0")+":"+String(n%60).padStart(2,"0")}
+function updateHUD(){
+ $("mission").textContent=mission+" / 100";$("missionNumber").textContent=mission;
+ $("hintsLeft").textContent=hints;$("hintBtn").textContent="💡 Ёрӣ ("+hints+")";
+ $("score").textContent=score;$("timer").textContent=formatTime(seconds);
+ $("record").textContent=record;
 }
-
-// Сохтани массиви майдон
-function createEmptyBoard() {
-    board = Array.from(
-        { length: size },
-        () => Array(size).fill("")
-    );
-
-    placements = {};
+function shuffle(a){const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]]}return x}
+function randomItem(a){return a[Math.floor(Math.random()*a.length)]}
+function makeMissionWords(){
+ const count=Math.min(5+Math.floor((mission-1)/12),9);
+ const pool=shuffle(allWords.filter(w=>w.length<=size));
+ return pool.slice(0,count).sort((a,b)=>b.length-a.length);
 }
-
-// Санҷиши ҷойгиршавии калима
-function canPlace(word, row, col, dr, dc) {
-    for (let i = 0; i < word.length; i++) {
-        const r = row + dr * i;
-        const c = col + dc * i;
-
-        if (r < 0 || r >= size || c < 0 || c >= size) {
-            return false;
-        }
-
-        if (board[r][c] !== "" && board[r][c] !== word[i]) {
-            return false;
-        }
-    }
-
-    return true;
+function emptyBoard(){board=Array.from({length:size},()=>Array(size).fill(""));placements={}}
+const directions=[[0,1],[0,-1],[1,0],[-1,0]];
+function canPlace(word,row,col,dr,dc){
+ for(let i=0;i<word.length;i++){const r=row+dr*i,c=col+dc*i;if(r<0||r>=size||c<0||c>=size)return false;if(board[r][c]&&board[r][c]!==word[i])return false}
+ return true;
 }
-
-// Ҷойгир кардани калима
-function placeWord(word) {
-    for (let attempt = 0; attempt < 500; attempt++) {
-        const direction = randomItem(directions);
-
-        const row = Math.floor(Math.random() * size);
-        const col = Math.floor(Math.random() * size);
-
-        const [dr, dc] = direction;
-
-        if (canPlace(word, row, col, dr, dc)) {
-            const cells = [];
-
-            for (let i = 0; i < word.length; i++) {
-                const r = row + dr * i;
-                const c = col + dc * i;
-
-                board[r][c] = word[i];
-                cells.push({ r, c });
-            }
-
-            placements[word] = cells;
-            return true;
-        }
-    }
-
-    return false;
+function placeWord(word){
+ for(let tries=0;tries<1200;tries++){
+  const [dr,dc]=randomItem(directions),row=Math.floor(Math.random()*size),col=Math.floor(Math.random()*size);
+  if(!canPlace(word,row,col,dr,dc))continue;
+  const cells=[];for(let i=0;i<word.length;i++){const r=row+dr*i,c=col+dc*i;board[r][c]=word[i];cells.push({r,c})}
+  placements[word]=cells;return true;
+ }
+ return false;
 }
-
-// Пур кардани ҳарфҳои холӣ
-function fillEmptyCells() {
-    const letters = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЧШЪЭЮЯӢӮҒҚҶ";
-
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-            if (board[r][c] === "") {
-                board[r][c] = randomItem(letters.split(""));
-            }
-        }
-    }
+function fillBoard(){
+ const letters="АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЧШЪЭЮЯӢӮҒҚҶ";
+ for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(!board[r][c])board[r][c]=randomItem([...letters]);
 }
-
-// Оғози бозӣ
-function startGame() {
-    const category = document.getElementById("category").value;
-    const difficulty = document.getElementById("difficulty").value;
-
-    size = difficulties[difficulty].size;
-
-    score = 0;
-    seconds = 0;
-    paused = false;
-    finished = false;
-
-    foundWords = [];
-    currentSelection = [];
-
-    scoreElement.textContent = score;
-    timerElement.textContent = "00:00";
-    messageElement.textContent = "Калимаҳои пинҳоншударо пайдо кун!";
-
-    document.getElementById("pauseBtn").textContent = "⏸ Таваққуф";
-    document.getElementById("winModal").classList.remove("show");
-
-    createEmptyBoard();
-
-    let availableWords = [];
-
-    if (category === "all") {
-        availableWords = Object.values(categories).flat();
-    } else {
-        availableWords = categories[category];
-    }
-
-    const count = Math.min(
-        difficulties[difficulty].count,
-        availableWords.length
-    );
-
-    // Калимаҳои дарозтар аввал ҷойгир мешаванд
-    const selectedWords = [...availableWords]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, count)
-        .sort((a, b) => b.length - a.length);
-
-    words = [];
-
-    for (const word of selectedWords) {
-        if (placeWord(word)) {
-            words.push(word);
-        }
-    }
-
-    fillEmptyCells();
-
-    gridElement.style.setProperty("--size", size);
-    renderBoard();
-    renderWords();
-    updateProgress();
+function startGame(){
+ paused=false;finished=false;startCell=null;currentSelection=[];score=0;
+ seconds=Math.max(90,150-Math.floor((mission-1)/10)*5);
+ $("pauseBtn").textContent="⏸ Таваққуф";$("winModal").classList.remove("show");$("nextMissionBtn").style.display="none";
+ $("message").textContent="Калимаҳои миссияро пайдо кун!";
+ size=mission<20?10:mission<60?11:12;
+ emptyBoard();words=makeMissionWords();foundWords=[];
+ for(const w of words)if(!placeWord(w)){/* retry not needed; grid has spare room */}
+ words=words.filter(w=>placements[w]);
+ fillBoard();gridElement.style.setProperty("--size",size);renderBoard();renderWords();updateProgress();updateHUD();
 }
-
-// Намоиши майдон
-function renderBoard() {
-    gridElement.innerHTML = "";
-
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-            const cell = document.createElement("div");
-
-            cell.className = "cell";
-            cell.textContent = board[r][c];
-
-            cell.dataset.row = r;
-            cell.dataset.col = c;
-
-            gridElement.appendChild(cell);
-        }
-    }
+function renderBoard(){
+ gridElement.innerHTML="";
+ for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+  const cell=document.createElement("div");cell.className="cell";cell.textContent=board[r][c];cell.dataset.row=r;cell.dataset.col=c;gridElement.appendChild(cell);
+ }
 }
-
-// Намоиши калимаҳо
-function renderWords() {
-    wordListElement.innerHTML = "";
-
-    words.forEach(word => {
-        const item = document.createElement("div");
-
-        item.className = "word-item";
-        item.textContent = word;
-
-        if (foundWords.includes(word)) {
-            item.classList.add("found");
-        }
-
-        wordListElement.appendChild(item);
-    });
+function renderWords(){
+ $("wordList").innerHTML="";
+ words.forEach(w=>{const el=document.createElement("span");el.className="word-item";el.textContent=w;if(foundWords.includes(w)){el.classList.add("found");el.style.background=wordColors[w];el.style.borderColor=wordColors[w]}$("wordList").appendChild(el)});
 }
-
-// Навсозии пешрафт
-function updateProgress() {
-    const total = words.length;
-    const found = foundWords.length;
-
-    document.getElementById("progress").textContent =
-        `${found} / ${total}`;
-
-    document.getElementById("progressBar").style.width =
-        (total ? found / total * 100 : 0) + "%";
+function updateProgress(){
+ $("progress").textContent=foundWords.length+" / "+words.length;
+ $("progressBar").style.width=(foundWords.length/Math.max(1,words.length)*100)+"%";
 }
-
-// Гирифтани координатаи ячейка
-function getCellFromPoint(x, y) {
-    const element = document.elementFromPoint(x, y);
-
-    if (!element) return null;
-
-    const cell = element.closest(".cell");
-
-    if (!cell || !gridElement.contains(cell)) return null;
-
-    return {
-        r: Number(cell.dataset.row),
-        c: Number(cell.dataset.col)
-    };
+function getCell(x,y){
+ const el=document.elementFromPoint(x,y),cell=el?.closest(".cell");
+ return cell&&gridElement.contains(cell)?{r:Number(cell.dataset.row),c:Number(cell.dataset.col)}:null;
 }
-
-// Сохтани хатти рост аз аввал то охир
-function getLine(start, end) {
-    const dr = end.r - start.r;
-    const dc = end.c - start.c;
-
-    if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) {
-        return [];
-    }
-
-    const steps = Math.max(Math.abs(dr), Math.abs(dc));
-
-    if (steps === 0) {
-        return [{ r: start.r, c: start.c }];
-    }
-
-    const rowStep = Math.sign(dr);
-    const colStep = Math.sign(dc);
-
-    const cells = [];
-
-    for (let i = 0; i <= steps; i++) {
-        cells.push({
-            r: start.r + rowStep * i,
-            c: start.c + colStep * i
-        });
-    }
-
-    return cells;
+function lineBetween(a,b){
+ const dr=b.r-a.r,dc=b.c-a.c;
+ if(dr!==0&&dc!==0)return [];
+ if(dr===0&&dc===0)return [a];
+ const length=Math.max(Math.abs(dr),Math.abs(dc)),sr=Math.sign(dr),sc=Math.sign(dc),out=[];
+ for(let i=0;i<=length;i++)out.push({r:a.r+sr*i,c:a.c+sc*i});
+ return out;
 }
-
-// Намоиши интихоб
-function showSelection(cells) {
-    gridElement.querySelectorAll(".cell.selected")
-        .forEach(cell => cell.classList.remove("selected"));
-
-    cells.forEach(pos => {
-        const cell = gridElement.querySelector(
-            `[data-row="${pos.r}"][data-col="${pos.c}"]`
-        );
-
-        if (cell) cell.classList.add("selected");
-    });
+function paintSelection(cells){
+ gridElement.querySelectorAll(".cell.selected").forEach(el=>el.classList.remove("selected"));
+ cells.forEach(p=>gridElement.querySelector('[data-row="'+p.r+'"][data-col="'+p.c+'"]')?.classList.add("selected"));
 }
-
-// Оғози интихоб
-gridElement.addEventListener("pointerdown", event => {
-    if (paused || finished) return;
-
-    const cell = getCellFromPoint(event.clientX, event.clientY);
-
-    if (!cell) return;
-
-    event.preventDefault();
-
-    startCell = cell;
-    endCell = cell;
-
-    currentSelection = getLine(startCell, endCell);
-
-    showSelection(currentSelection);
+gridElement.addEventListener("pointerdown",e=>{
+ if(paused||finished)return;const p=getCell(e.clientX,e.clientY);if(!p)return;
+ e.preventDefault();startCell=p;currentSelection=[p];gridElement.setPointerCapture?.(e.pointerId);paintSelection(currentSelection);
 });
-
-// Ҳаракати ангушт ё муш
-document.addEventListener("pointermove", event => {
-    if (!startCell || paused || finished) return;
-
-    const cell = getCellFromPoint(event.clientX, event.clientY);
-
-    if (!cell) return;
-
-    endCell = cell;
-    currentSelection = getLine(startCell, endCell);
-
-    showSelection(currentSelection);
+gridElement.addEventListener("pointermove",e=>{
+ if(!startCell||paused||finished)return;const p=getCell(e.clientX,e.clientY);if(!p)return;
+ const line=lineBetween(startCell,p);if(!line.length)return;currentSelection=line;paintSelection(line);
 });
-
-// Санҷидани калима
-document.addEventListener("pointerup", () => {
-    if (!startCell || paused || finished) return;
-
-    if (currentSelection.length > 0) {
-        checkSelection(currentSelection);
-    }
-
-    startCell = null;
-    endCell = null;
-    currentSelection = [];
-
-    gridElement.querySelectorAll(".cell.selected")
-        .forEach(cell => cell.classList.remove("selected"));
-});
-
-// Санҷиши калимаи интихобшуда
-function checkSelection(cells) {
-    const selectedWord = cells
-        .map(pos => board[pos.r][pos.c])
-        .join("");
-
-    const reversedWord = selectedWord.split("").reverse().join("");
-
-    const found = words.find(word =>
-        (word === selectedWord || word === reversedWord) &&
-        !foundWords.includes(word)
-    );
-
-    if (!found) {
-        messageElement.textContent = "❌ Ин калима дуруст нест. Боз кӯшиш кун!";
-        playSound(200);
-        return;
-    }
-
-    foundWords.push(found);
-
-    score += 10 + Math.max(0, 15 - found.length);
-
-    scoreElement.textContent = score;
-
-    messageElement.textContent = `✅ Офарин! "${found}" ёфт шуд!`;
-
-    playSound(850);
-
-    cells.forEach(pos => {
-        const cell = gridElement.querySelector(
-            `[data-row="${pos.r}"][data-col="${pos.c}"]`
-        );
-
-        if (cell) cell.classList.add("found");
-    });
-
-    renderWords();
-    updateProgress();
-
-    if (foundWords.length === words.length) {
-        finishGame();
-    }
+function endSelection(){
+ if(!startCell)return;
+ if(currentSelection.length)checkSelection(currentSelection);
+ startCell=null;currentSelection=[];gridElement.querySelectorAll(".cell.selected").forEach(el=>el.classList.remove("selected"));
 }
-
-// Анҷоми бозӣ
-function finishGame() {
-    finished = true;
-
-    const timeBonus = Math.max(0, 100 - seconds);
-    score += timeBonus;
-
-    scoreElement.textContent = score;
-
-    if (score > record) {
-        record = score;
-        localStorage.setItem("kalimaRecord", record);
-        recordElement.textContent = record;
-    }
-
-    document.getElementById("finalScore").textContent =
-        score + " хол";
-
-    document.getElementById("winModal").classList.add("show");
-
-    messageElement.textContent =
-        "🎉 Ҳамаи калимаҳо ёфт шуданд!";
-
-    playSound(1000);
+gridElement.addEventListener("pointerup",endSelection);gridElement.addEventListener("pointercancel",endSelection);
+let wordColors={};
+function checkSelection(cells){
+ const value=cells.map(p=>board[p.r][p.c]).join("");
+ const reverse=[...value].reverse().join("");
+ const found=words.find(w=>(w===value||w===reverse)&&!foundWords.includes(w));
+ if(!found){$("message").textContent="❌ Калима дуруст нест. Калимаро рост ё чап/боло ё поён интихоб кун.";sound("bad");return}
+ foundWords.push(found);wordColors[found]=palette[(foundWords.length-1)%palette.length];
+ score+=10+Math.max(0,15-found.length);$("message").textContent="✅ Офарин! "+found+" ёфт шуд!";
+ sound("good");
+ const actual=placements[found];actual.forEach(p=>{const el=gridElement.querySelector('[data-row="'+p.r+'"][data-col="'+p.c+'"]');if(el){el.classList.add("found");el.style.background=wordColors[found];el.style.borderColor=wordColors[found]}});
+ renderWords();updateProgress();updateHUD();if(foundWords.length===words.length)completeMission();
 }
-
-// Ёрӣ
-document.getElementById("hintBtn").addEventListener("click", () => {
-    if (paused || finished) return;
-
-    const remaining = words.filter(word =>
-        !foundWords.includes(word)
-    );
-
-    if (remaining.length === 0) return;
-
-    const word = randomItem(remaining);
-    const cells = placements[word];
-
-    cells.forEach(pos => {
-        const cell = gridElement.querySelector(
-            `[data-row="${pos.r}"][data-col="${pos.c}"]`
-        );
-
-        if (cell) cell.classList.add("hint-cell");
-    });
-
-    messageElement.textContent =
-        `💡 Ба ҳарфҳои зард нигоҳ кун: ${word}`;
-
-    playSound(500);
-
-    setTimeout(() => {
-        cells.forEach(pos => {
-            const cell = gridElement.querySelector(
-                `[data-row="${pos.r}"][data-col="${pos.c}"]`
-            );
-
-            if (cell) cell.classList.remove("hint-cell");
-        });
-
-        if (!finished) {
-            messageElement.textContent =
-                "Акнун калимаро пайдо кун!";
-        }
-    }, 1800);
+function completeMission(){
+ finished=true;const bonus=Math.max(0,Math.floor(seconds/2));score+=bonus;
+ if(score>record){record=score;localStorage.setItem("kalimaRecord",record)}
+ hints++;localStorage.setItem("kalimaHints",hints);
+ $("finalScore").textContent=score+" хол";$("winModal").classList.add("show");
+ $("nextMissionBtn").style.display=mission>=100?"none":"block";
+ $("message").textContent=mission===100?"🏆 Ҳамаи 100 миссия анҷом ёфт!":"🎉 Миссия гузашт! 1 ёрии нав гирифтӣ.";
+ sound("win");updateHUD();
+}
+function useHint(){
+ if(paused||finished)return;
+ if(hints<=0){$("message").textContent="Ёрӣ тамом шуд. Барои гузаштани миссия 1 ёрии нав мегирӣ.";sound("bad");return}
+ const word=randomItem(words.filter(w=>!foundWords.includes(w)));if(!word)return;
+ hints--;localStorage.setItem("kalimaHints",hints);updateHUD();
+ const first=placements[word][0],el=gridElement.querySelector('[data-row="'+first.r+'"][data-col="'+first.c+'"]');
+ el?.classList.add("hint-cell");$("message").textContent="💡 Калима бо ҳарфи «"+board[first.r][first.c]+"» сар мешавад.";
+ sound("hint");setTimeout(()=>el?.classList.remove("hint-cell"),1800);
+}
+$("hintBtn").addEventListener("click",useHint);
+$("pauseBtn").addEventListener("click",()=>{
+ if(finished)return;paused=!paused;$("pauseBtn").textContent=paused?"▶ Давом додан":"⏸ Таваққуф";
+ $("message").textContent=paused?"⏸ Бозӣ таваққуф шуд.":"▶ Бозӣ идома дорад.";if(!paused)sound("hint");
 });
-
-// Таваққуф
-document.getElementById("pauseBtn").addEventListener("click", () => {
-    if (finished) return;
-
-    paused = !paused;
-
-    document.getElementById("pauseBtn").textContent =
-        paused ? "▶ Давом додан" : "⏸ Таваққуф";
-
-    if (paused) {
-        messageElement.textContent = "⏸ Бозӣ таваққуф шуд.";
-    } else {
-        messageElement.textContent = "▶ Бозӣ идома дорад!";
-    }
+$("restartBtn").addEventListener("click",startGame);
+$("playAgainBtn").addEventListener("click",()=>{$("winModal").classList.remove("show");startGame()});
+$("nextMissionBtn").addEventListener("click",()=>{
+ if(mission>=100)return;mission++;localStorage.setItem("kalimaMission",mission);$("winModal").classList.remove("show");startGame();
 });
-
-// Аз нав оғоз кардан
-document.getElementById("restartBtn").addEventListener("click", startGame);
-
-document.getElementById("playAgainBtn").addEventListener("click", startGame);
-
-// Иваз кардани категория ё сатҳ
-document.getElementById("category").addEventListener("change", startGame);
-
-document.getElementById("difficulty").addEventListener("change", startGame);
-
-// Садо
-document.getElementById("soundBtn").addEventListener("click", () => {
-    soundEnabled = !soundEnabled;
-
-    document.getElementById("soundBtn").textContent =
-        soundEnabled ? "🔊" : "🔇";
-
-    if (soundEnabled) playSound();
-});
-
-// Оғози аввалини бозӣ
-startGame();
+$("soundBtn").addEventListener("click",()=>{soundEnabled=!soundEnabled;$("soundBtn").textContent=soundEnabled?"🔊":"🔇";if(soundEnabled)sound("good")});
+setInterval(()=>{
+ if(paused||finished)return;
+ seconds=Math.max(0,seconds-1);$("timer").textContent=formatTime(seconds);
+ if(seconds===30)sound("tick");
+ if(seconds===10)sound("tick");
+ if(seconds===0){finished=true;$("message").textContent="⏰ Вақт тамом шуд! Аз нав кӯшиш кун.";sound("timeout");$("playAgainBtn").textContent="Боз кӯшиш кун";$("winModal").classList.add("show");$("nextMissionBtn").style.display="none";$("finalScore").textContent=score+" хол";}
+},1000);
+updateHUD();startGame();
