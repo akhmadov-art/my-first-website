@@ -1,0 +1,20 @@
+{
+  "name": "kalimayobak",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Калимаёбак - Tajik Word Search Game",
+  "scripts": {
+    "copy:web": "node scripts/copy-web.mjs",
+    "cap:sync": "npm run copy:web && cap sync",
+    "android": "npm run cap:sync && cap open android",
+    "ios": "npm run cap:sync && cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/ios": "^7.4.3"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "tj.kalimayobak.game",
+  "appName": "Калимаёбак",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

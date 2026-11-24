@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#152d68"/>
+      <stop offset="1" stop-color="#101326"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#70e6ff"/>
+      <stop offset="1" stop-color="#2871ed"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe878"/>
+      <stop offset="1" stop-color="#ff9d20"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="82" y="82" width="348" height="348" rx="42" fill="#eaf4ff" stroke="#4c9cff" stroke-width="14"/>
+  <g fill="#1c376b" font-family="Arial,sans-serif" font-size="54" font-weight="800" text-anchor="middle">
+    <text x="151" y="170">К</text><text x="256" y="170">А</text><text x="361" y="170">Л</text>
+    <text x="151" y="270">И</text><text x="256" y="270">М</text><text x="361" y="270">А</text>
+    <text x="151" y="370">Ё</text><text x="256" y="370">Б</text><text x="361" y="370">А</text>
+  </g>
+  <path d="M110 220h292M110 320h292M206 100v300M306 100v300" stroke="#9db9e8" stroke-width="7" opacity=".8"/>
+  <circle cx="337" cy="151" r="103" fill="url(#glass)" stroke="#d7f7ff" stroke-width="18" opacity=".96"/>
+  <circle cx="337" cy="151" r="72" fill="#bdeeff" opacity=".42"/>
+  <path d="M408 226l70 70" stroke="#ffb52e" stroke-width="38" stroke-linecap="round"/>
+  <path d="M408 226l70 70" stroke="#fff0b5" stroke-width="9" stroke-linecap="round"/>
+  <rect x="66" y="405" width="380" height="72" rx="28" fill="url(#gold)" stroke="#fff0a3" stroke-width="6"/>
+  <text x="256" y="454" font-family="Arial,sans-serif" font-size="43" font-weight="900" text-anchor="middle" fill="#18254a">КАЛИМАЁБАК</text>
+</svg>
