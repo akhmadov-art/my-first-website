@@ -74,7 +74,7 @@ jobs:
           mkdir -p android/app/src/main/res/drawable
           mkdir -p android/app/src/main/res/values
 
-          rsvg-convert -w 512 -h 512 logo.svg > /tmp/kalimayobak-icon.png
+          rsvg-convert -w 512 -h 512 Kalimayobak/logo.svg > /tmp/kalimayobak-icon.png
 
           convert /tmp/kalimayobak-icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           convert /tmp/kalimayobak-icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png
