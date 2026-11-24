@@ -27,7 +27,7 @@ body {
     color: #70a5ff;
 }
 
-.icon-btn {
+.logo img {\n    width: 42px;\n    height: 42px;\n    border-radius: 10px;\n    object-fit: contain;\n}\n\n.icon-btn {
     background: #252f50;
     border: none;
     padding: 10px;
