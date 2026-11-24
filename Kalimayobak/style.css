@@ -56,3 +56,14 @@ footer{text-align:center;padding:24px 10px;color:#76829e;font-size:13px}
 .modal-box h3{color:#80a9ff;font-size:28px;margin-bottom:18px}
 .modal-box .btn{display:block;width:100%;margin-top:9px}
 @media(max-width:520px){.header{padding:12px 16px}.logo{font-size:17px}.logo img{width:38px;height:38px}.container{margin-top:20px}.stats{grid-template-columns:repeat(2,1fr);gap:8px}.stat{padding:10px 5px}.stat strong{font-size:19px}.game-panel{padding:12px}.grid{gap:3px}.cell{border-radius:4px}.controls{flex-wrap:wrap}.btn{min-width:28%;font-size:12px;padding:12px 5px}.mission-strip{padding:11px}.settings{gap:8px}}
+
+[hidden]{display:none!important}.header-actions{display:flex;gap:8px;align-items:center}
+.home-screen{max-width:620px;margin:20px auto 40px}.home-hero{text-align:center;padding:24px 10px}.home-hero h1{font-size:clamp(34px,7vw,52px);margin:13px 0;background:linear-gradient(90deg,#79aaff,#c59aff);background-clip:text;color:transparent}.home-hero p{color:#a8b1ca;line-height:1.6}
+.profile-card,.level-card,.home-tips{background:#171e36;border:1px solid #303d61;border-radius:20px;padding:20px;margin:14px 0}
+.profile-card{display:flex;align-items:center;gap:18px}.profile-avatar{width:76px;height:76px;flex:0 0 76px;border-radius:22px;background:#27365d;display:grid;place-items:center;font-size:42px;border:1px solid #526a9f}
+.profile-fields{flex:1;display:grid;gap:7px}.profile-fields label,.level-card label{font-size:13px;color:#b9c5e2;margin-top:4px}
+input,select{font:inherit}.profile-fields input,.profile-fields select,.level-card select{width:100%;padding:12px;border-radius:11px;background:#0f172c;color:#fff;border:1px solid #3a4a70;outline:none}
+.level-card h2{font-size:21px}.level-card>p{color:#a8b1ca;margin:8px 0 14px}.level-info{display:flex;justify-content:space-between;color:#aebbd7;margin:16px 0}.level-info strong{color:#ffdb78}
+.start-game{width:100%;background:linear-gradient(100deg,#386fe0,#7552c7);font-size:17px;padding:15px}
+.home-tips strong{color:#83aaff}.home-tips p{color:#aebbd7;line-height:1.6;margin-top:8px}.game-welcome{color:#aab8d6;margin:4px 0 14px}.game-welcome strong{color:#ffdc84}
+@media(max-width:520px){.profile-card{padding:15px;gap:12px}.profile-avatar{width:62px;height:62px;flex-basis:62px;font-size:34px}.profile-fields input,.profile-fields select{padding:10px}.home-hero{padding:18px 5px}}
