@@ -1,5 +1,4 @@
-
-name: KalimaYobak - Auto Build APK
+name: KalimaYobak - Build Android APK
 
 on:
   push:
@@ -11,85 +10,120 @@ permissions:
 
 jobs:
   build-android:
-    name: Generate Android Files and APK
+    name: Build APK and Android project
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Гирифтани код аз GitHub
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Насби Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      # 3. Насби Java
-      - name: Setup Java JDK
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
-      # 4. Насби Android SDK
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
-      # 5. Насби китобхонаҳо
-      - name: Install Dependencies
+      - name: Install image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin imagemagick
+
+      - name: Install project dependencies
         run: npm install
 
-      # 6. Сохтани папкаи WWW
-      - name: Prepare Web Files
+      - name: Prepare web app
         run: |
+          test -f Kalimayobak/index.html
+          test -f Kalimayobak/style.css
+          test -f Kalimayobak/script.js
           mkdir -p www
-          cp index.html www/
-          cp style.css www/
-          cp script.js www/
+          cp Kalimayobak/index.html www/index.html
+          cp Kalimayobak/style.css www/style.css
+          cp Kalimayobak/script.js www/script.js
+          cp logo.svg www/logo.svg
 
-          if [ -f logo.svg ]; then
-            cp logo.svg www/
-          fi
-
-      # 7. Сохтани Android Project
-      - name: Generate Android Project
+      - name: Generate Android project
         run: |
           if [ ! -d android ]; then
             npx cap add android
           fi
-
           npx cap sync android
 
-      # 8. Сохтани APK
-      - name: Build Android APK
+      - name: Generate launcher icons
+        run: |
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+          mkdir -p android/app/src/main/res/drawable
+          mkdir -p android/app/src/main/res/values
+
+          rsvg-convert -w 512 -h 512 logo.svg > /tmp/kalimayobak-icon.png
+
+          convert /tmp/kalimayobak-icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          convert /tmp/kalimayobak-icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          convert /tmp/kalimayobak-icon.png -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          convert /tmp/kalimayobak-icon.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          convert /tmp/kalimayobak-icon.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
+          cp /tmp/kalimayobak-icon.png android/app/src/main/res/drawable/ic_launcher_foreground.png
+
+          cat > android/app/src/main/res/values/ic_launcher_background.xml <<'EOF'
+          <resources>
+              <color name="ic_launcher_background">#101326</color>
+          </resources>
+          EOF
+
+          cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml <<'EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_launcher_background"/>
+              <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+          </adaptive-icon>
+          EOF
+
+      - name: Build debug APK
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      # 9. Санҷиши мавҷудияти APK
-      - name: Check APK
+      - name: Verify APK
         run: |
-          ls -lh android/app/build/outputs/apk/debug/
-          test -f android/app/build/outputs/apk/debug/app-debug.apk
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          ls -lh android/app/build/outputs/apk/debug/app-debug.apk
 
-      # 10. ZIP кардани Android Project
-      - name: Package Android Project
+      - name: Package Android project files
         run: |
           zip -qr KalimaYobak-Android-Project.zip android
 
-      # 11. Бор кардани APK ва Android Project
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: KalimaYobak-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
           retention-days: 30
 
-      - name: Upload Android Project
+      - name: Upload Android project
         uses: actions/upload-artifact@v4
         with:
           name: KalimaYobak-Android-Files
           path: KalimaYobak-Android-Project.zip
+          if-no-files-found: error
           retention-days: 30
