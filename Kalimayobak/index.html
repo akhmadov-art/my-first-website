@@ -1,119 +1,71 @@
-
 <!DOCTYPE html>
 <html lang="tg">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#10152b">
-    <title>Калимаёбак | Word Search</title>
-    <link rel="icon" type="image/svg+xml" href="logo.svg">
-    <link rel="apple-touch-icon" href="logo.svg">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#10152b"><title>Калимаёбак</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg"><link rel="apple-touch-icon" href="logo.svg">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <header class="header">
-    <div class="logo"><img src="logo.svg" alt="Логотип Калимаёбак"> КАЛИМАЁБАК</div>
-    <button id="soundBtn" class="icon-btn">🔊</button>
+ <div class="logo"><img src="logo.svg" alt="Логотип Калимаёбак"> КАЛИМАЁБАК</div>
+ <div class="header-actions">
+  <button id="backToHome" class="icon-btn" hidden>⌂ Меню</button>
+  <button id="soundBtn" class="icon-btn" aria-label="Овоз">🔊</button>
+ </div>
 </header>
-
 <main class="container">
+ <section id="homeScreen" class="home-screen">
+  <div class="home-hero"><span class="tag">WORD SEARCH • 100 МИССИЯ</span>
+   <h1>Калимаёбак</h1><p>Зеҳнатро санҷ, калимаҳоро пайдо кун ва ба сатҳи нав гузар!</p>
+  </div>
+  <section class="profile-card">
+   <div class="profile-avatar" id="avatarPreview">🧑‍🎓</div>
+   <div class="profile-fields">
+    <label for="profileName">Номи бозигар</label>
+    <input id="profileName" maxlength="20" placeholder="Номатро навис">
+    <label for="avatarSelect">Аватар</label>
+    <select id="avatarSelect"><option>🧑‍🎓</option><option>👦</option><option>👧</option><option>🧑‍💻</option><option>🦊</option><option>🐼</option><option>🦁</option><option>🐯</option><option>🐸</option><option>🚀</option></select>
+   </div>
+  </section>
+  <section class="level-card">
+   <h2>🎯 Сатҳи бозиро интихоб кун</h2>
+   <p>Аз кадом миссия сар кардан мехоҳӣ?</p>
+   <label for="levelSelect">Миссия</label>
+   <select id="levelSelect"></select>
+   <div class="level-info"><span>⭐ Рекорди ту</span><strong id="homeRecord">0</strong></div>
+   <button id="startGameBtn" class="btn start-game">▶ Оғози бозӣ</button>
+  </section>
+  <div class="home-tips"><strong>Чӣ тавр бозӣ мекунем?</strong><p>Калимаҳоро бо ангушт интихоб кун: рост, чап, боло ё поён. Ҳар миссияро гузар ва ёрии нав гир!</p></div>
+ </section>
 
-    <section class="hero">
-        <span class="tag">WORD SEARCH GAME</span>
-        <h1>Калимаҳои пинҳоншударо ёб!</h1>
-        <p>Ҳарфҳоро пайваст кун ва калимаҳои пинҳоншударо пайдо намо.</p>
-    </section>
-
-    <section class="stats">
-        <div class="stat"><span>🎯 Миссия</span><strong id="mission">1 / 100</strong></div>
-        <div class="stat"><span>⭐ Холҳо</span><strong id="score">0</strong></div>
-        <div class="stat"><span>⏱ Вақт</span><strong id="timer">02:00</strong></div>
-        <div class="stat"><span>🏆 Рекорд</span><strong id="record">0</strong></div>
-    </section>
-    <section class="mission-strip">
-        <div><strong>Миссияи <span id="missionNumber">1</span></strong><small id="missionText">Ҳамаи калимаҳоро пайдо кун!</small></div>
-        <div class="hint-counter">💡 Ёриҳо: <strong id="hintsLeft">3</strong></div>
-    </section>
-
-    <section class="settings">
-        <div class="field">
-            <label>Категория</label>
-            <select id="category">
-                <option value="all">Ҳамаи категорияҳо</option>
-                <option value="animals">Ҳайвонот</option>
-                <option value="fruits">Меваҳо</option>
-                <option value="technology">Технология</option>
-                <option value="sports">Варзиш</option>
-                <option value="nature">Табиат</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Душворӣ</label>
-            <select id="difficulty">
-                <option value="easy">Осон</option>
-                <option value="medium" selected>Миёна</option>
-                <option value="hard">Душвор</option>
-            </select>
-        </div>
-    </section>
-
-    <section class="game-panel">
-
-        <div class="game-top">
-            <h2>🧩 Майдони бозӣ</h2>
-            <span id="progress">0 / 0</span>
-        </div>
-
-        <div id="grid" class="grid"></div>
-
-        <div class="progress-track">
-            <div id="progressBar"></div>
-        </div>
-
-        <div class="words-section">
-            <h3>📚 Калимаҳои пинҳоншуда</h3>
-            <div id="wordList" class="word-list"></div>
-        </div>
-
-        <div class="controls">
-            <button id="hintBtn" class="btn hint">💡 Ёрӣ (3)</button>
-            <button id="pauseBtn" class="btn pause">⏸ Таваққуф</button>
-            <button id="restartBtn" class="btn restart">🔄 Аз нав</button>
-        </div>
-
-        <p id="message" class="message">
-            Бозиро оғоз кун!
-        </p>
-
-    </section>
-
-    <section class="instructions">
-        <h3>📖 Чӣ тавр бозӣ кардан лозим?</h3>
-        <p>1. Аз рӯйхати калимаҳо як калимаро интихоб кун.</p>
-        <p>2. Ҳарфҳои онро дар майдон пайдо кун.</p>
-        <p>3. Калимаҳо танҳо рост, чап, боло ё поён ҷойгир мешаванд; диагоналӣ нестанд.</p>
-        <p>4. Ҳар калима ранги махсус мегирад. Барои ҳар миссияи гузаронидашуда 1 ёрии нав мегирӣ.</p>
-    </section>
-
+ <section id="gameScreen" class="game-screen" hidden>
+  <div class="game-welcome">Бозӣ идома дорад, <strong id="welcomeName">бозигар</strong>!</div>
+  <section class="stats">
+   <div class="stat"><span>🎯 Миссия</span><strong id="mission">1 / 100</strong></div>
+   <div class="stat"><span>⭐ Холҳо</span><strong id="score">0</strong></div>
+   <div class="stat"><span>⏱ Вақт</span><strong id="timer">02:00</strong></div>
+   <div class="stat"><span>🏆 Рекорд</span><strong id="record">0</strong></div>
+  </section>
+  <section class="mission-strip">
+   <div><strong>Миссияи <span id="missionNumber">1</span></strong><small id="missionText">Ҳамаи калимаҳоро пайдо кун!</small></div>
+   <div class="hint-counter">💡 Ёриҳо: <strong id="hintsLeft">3</strong></div>
+  </section>
+  <section class="settings">
+   <div class="field"><label for="category">Категория</label><select id="category"><option value="all">Ҳамаи категорияҳо</option><option value="animals">Ҳайвонот</option><option value="fruits">Меваҳо</option><option value="technology">Технология</option><option value="sports">Варзиш</option><option value="nature">Табиат</option></select></div>
+   <div class="field"><label for="difficulty">Душворӣ</label><select id="difficulty"><option value="easy">Осон</option><option value="medium" selected>Миёна</option><option value="hard">Душвор</option></select></div>
+  </section>
+  <section class="game-panel">
+   <div class="game-top"><h2>🧩 Майдони бозӣ</h2><span id="progress">0 / 0</span></div>
+   <div id="grid" class="grid"></div><div class="progress-track"><div id="progressBar"></div></div>
+   <div class="words-section"><h3>📚 Калимаҳои пинҳоншуда</h3><div id="wordList" class="word-list"></div></div>
+   <div class="controls"><button id="hintBtn" class="btn hint">💡 Ёрӣ (3)</button><button id="pauseBtn" class="btn pause">⏸ Таваққуф</button><button id="restartBtn" class="btn restart">🔄 Аз нав</button></div>
+   <p id="message" class="message">Бозиро оғоз кун!</p>
+  </section>
+  <section class="instructions"><h3>📖 Қоидаҳои бозӣ</h3><p>1. Калимаҳоро аз рӯйхат дар майдон пайдо кун.</p><p>2. Ангуштатро аз ҳарфи аввал то охир каш.</p><p>3. Самтҳо танҳо рост, чап, боло ва поён мебошанд.</p><p>4. Ҳар миссияи гузаронидашуда 1 ёрии нав медиҳад.</p></section>
+ </section>
 </main>
-
-<footer>
-    <p>© 2026 Калимаёбак | Бозӣ барои рушди зеҳн 🧠</p>
-</footer>
-
-<div id="winModal" class="modal">
-    <div class="modal-box">
-        <div class="trophy">🏆</div>
-        <h2>Офарин! Ғолиб шудӣ!</h2>
-        <p>Ҳамаи калимаҳоро ёфтӣ!</p>
-        <h3 id="finalScore">0 хол</h3>
-        <button id="playAgainBtn" class="btn restart">Аз нав бозӣ кардан</button>
-        <button id="nextMissionBtn" class="btn next-mission">Миссияи навбатӣ ➜</button>
-    </div>
-</div>
-
+<footer>© 2026 Калимаёбак | Бозӣ барои рушди зеҳн 🧠</footer>
+<div id="winModal" class="modal"><div class="modal-box"><div class="trophy">🏆</div><h2>Офарин! Ғолиб шудӣ!</h2><p>Ҳамаи калимаҳоро ёфтӣ!</p><h3 id="finalScore">0 хол</h3><button id="playAgainBtn" class="btn restart">Ин миссияро такрор кун</button><button id="nextMissionBtn" class="btn next-mission">Миссияи навбатӣ ➜</button><button id="homeFromWin" class="btn pause">Ба саҳифаи аввал</button></div></div>
 <script src="script.js"></script>
-</body>
-</html>
+</body></html>
